@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Railway Crossing Control System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --state-idle: #28a745;
+            --state-warning: #ffc107;
+            --state-countdown: #17a2b8;
+            --state-barrier-down: #007bff;
+            --state-train-passing: #6c757d;
+            --state-emergency: #dc3545;
+            --state-maintenance: #343a40;
+        }
+        
+        .state-card {
+            transition: all 0.3s;
+            border-left: 5px solid #6c757d;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .state-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: currentColor;
+            opacity: 0.3;
+        }
+        
+        .state-card.idle { border-left-color: var(--state-idle); color: var(--state-idle); }
+        .state-card.warning { border-left-color: var(--state-warning); color: var(--state-warning); }
+        .state-card.countdown { border-left-color: var(--state-countdown); color: var(--state-countdown); }
+        .state-card.barrier-down { border-left-color: var(--state-barrier-down); color: var(--state-barrier-down); }
+        .state-card.train-passing { border-left-color: var(--state-train-passing); color: var(--state-train-passing); }
+        .state-card.emergency { border-left-color: var(--state-emergency); color: var(--state-emergency); }
+        .state-card.maintenance { border-left-color: var(--state-maintenance); color: var(--state-maintenance); }
+        
+        .state-card.warning, .state-card.countdown {
+            animation: pulse 2s infinite;
+        }
+        
+        .state-card.emergency {
+            animation: pulse-danger 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+        }
+        
+        @keyframes pulse-danger {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        
+        .status-active { background: #28a745; animation: blink 1s infinite; }
+        .status-inactive { background: #6c757d; }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .train-track {
+            height: 120px;
+            background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
+            position: relative;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 2px solid #adb5bd;
+            overflow: hidden;
+        }
+        
+        .train-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: repeating-linear-gradient(
+                90deg,
+                #495057 0,
+                #495057 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            transform: translateY(-50%);
+        }
+        
+        .train {
+            position: absolute;
+            top: 50%;
+            width: 50px;
+            height: 25px;
+            border-radius: 6px;
+            transform: translateY(-50%);
+            transition: left 0.8s ease-in-out;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .train::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -10px;
+            width: 15px;
+            height: 15px;
+            background: inherit;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .barrier {
+            position: absolute;
+            top: 50%;
+            width: 100px;
+            height: 8px;
+            background: linear-gradient(135deg, #495057 0%, #212529 100%);
+            transform-origin: left center;
+            transition: transform 1s ease;
+            z-index: 1;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .crossing-line {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            height: 2px;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent 0,
+                transparent 5px,
+                #dc3545 5px,
+                #dc3545 10px
+            );
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+        
+        .action-timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 10px 0;
+        }
+        
+        .action-timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        
+        .action-step {
+            position: relative;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #6c757d;
+        }
+        
+        .action-step::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            width: 12px;
+            height: 12px;
+            background: #6c757d;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .action-step.current {
+            border-left-color: #007bff;
+            background: #e7f1ff;
+        }
+        
+        .action-step.current::before {
+            background: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
+        }
+        
+        .action-step.completed {
+            border-left-color: #28a745;
+        }
+        
+        .action-step.completed::before {
+            background: #28a745;
+        }
+        
+        .countdown-display {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background: #343a40;
+            color: white;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .log-entry {
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+            border-left: 4px solid #6c757d;
+            background: #f8f9fa;
+            font-size: 0.9em;
+        }
+        
+        .log-entry.info { border-left-color: #17a2b8; }
+        .log-entry.success { border-left-color: #28a745; }
+        .log-entry.warning { border-left-color: #ffc107; }
+        .log-entry.danger { border-left-color: #dc3545; }
+        .log-entry.emergency { border-left-color: #dc3545; background: #f8d7da; }
+        
+        .system-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .overview-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .overview-card .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .overview-card .label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .control-btn {
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .state-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .state-step {
+            text-align: center;
+            padding: 10px;
+            flex: 1;
+            position: relative;
+        }
+        
+        .state-step::after {
+            content: '→';
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .state-step:last-child::after {
+            display: none;
+        }
+        
+        .state-step.active {
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .state-step.completed {
+            color: #28a745;
+        }
+        
+        /* Enhanced Monitoring Styles */
+        .monitoring-card {
+            height: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            transition: transform 0.3s ease;
+        }
+        
+        .monitoring-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .health-indicator {
+            position: relative;
+        }
+        
+        .health-indicator .progress {
+            overflow: visible;
+            position: relative;
+        }
+        
+        .health-indicator .progress-bar {
+            position: relative;
+            border-radius: 5px;
+        }
+        
+        .health-indicator .progress-bar::after {
+            content: attr(aria-valuenow) '%';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .component-health .progress {
+            margin-bottom: 10px;
+        }
+        
+        .component-health small {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.8em;
+            color: #666;
+        }
+        
+        .statistics-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        .statistics-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .maintenance-alert {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .performance-bar {
+            position: relative;
+            height: 25px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .performance-bar .progress-bar {
+            border-radius: 12px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .system-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .statistics-number {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-train-front"></i>
+                Railway Crossing Control System v2.0
+                <span class="badge bg-primary">Professional Edition</span>
+            </a>
+            <div class="navbar-text d-flex align-items-center">
+                <div class="me-3">
+                    <span class="status-indicator status-active" id="system-status"></span>
+                    <span id="system-health" class="text-light">System Health: 100%</span>
+                </div>
+                <div>
+                    <i class="bi bi-clock text-light me-1"></i>
+                    <span id="current-time" class="text-light">00:00:00</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-3">
+        <!-- System Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="system-overview">
+                    <div class="overview-card">
+                        <div class="number" id="total-trains">0</div>
+                        <div class="label">Trains Processed</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="number" id="active-crossings">0</div>
+                        <div class="label">Active Crossings</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="number" id="emergency-status">No</div>
+                        <div class="label">Emergency Status</div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="number" id="system-uptime">0s</div>
+                        <div class="label">System Uptime</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============== ENHANCED MONITORING SECTION =============== -->
+        <div class="row mb-4">
+            <!-- System Health Card -->
+            <div class="col-md-4 mb-3">
+                <div class="card monitoring-card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>System Health</h5>
+                        <span id="healthPercentage" class="badge bg-light text-dark fs-6">100%</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="health-indicator mb-3">
+                            <div class="progress" style="height: 25px;">
+                                <div id="healthBar" class="progress-bar" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div id="healthDetails">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-exclamation-triangle text-warning me-1"></i> Active Faults:</span>
+                                <span id="faultCount" class="badge bg-success">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="fas fa-satellite-dish text-info me-1"></i> Sensor Status:</span>
+                                <span id="sensorFaults" class="badge bg-success">0/16 OK</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span><i class="fas fa-tachometer-alt text-warning me-1"></i> Success Rate:</span>
+                                <span id="successRate" class="badge bg-success">100%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Predictive Maintenance Card -->
+            <div class="col-md-4 mb-3">
+                <div class="card monitoring-card">
+                    <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Predictive Maintenance</h5>
+                        <span id="maintenanceCount" class="badge bg-danger d-none">0</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="maintenanceAlerts" class="mb-3">
+                            <div class="alert alert-success py-2">
+                                <i class="fas fa-check me-2"></i>No maintenance required
+                            </div>
+                        </div>
+                        <div class="component-health">
+                            <small>Barrier Motors</small>
+                            <div class="progress" style="height: 8px;">
+                                <div id="barrierHealth" class="progress-bar bg-success" style="width: 95%"></div>
+                            </div>
+                            <small>Traffic Lights</small>
+                            <div class="progress" style="height: 8px;">
+                                <div id="lightHealth" class="progress-bar bg-info" style="width: 88%"></div>
+                            </div>
+                            <small>Alarm Systems</small>
+                            <div class="progress" style="height: 8px;">
+                                <div id="alarmHealth" class="progress-bar bg-warning" style="width: 75%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Card -->
+            <div class="col-md-4 mb-3">
+                <div class="card monitoring-card">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Live Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center mb-3">
+                            <div class="col-6 border-end">
+                                <div class="statistics-number text-primary" id="totalTrains">0</div>
+                                <div class="statistics-label">Trains</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="statistics-number text-success" id="totalOperations">0</div>
+                                <div class="statistics-label">Operations</div>
+                            </div>
+                        </div>
+                        <div class="row text-center mb-3">
+                            <div class="col-6 border-end">
+                                <div class="statistics-number text-warning" id="uptimeHours">0h</div>
+                                <div class="statistics-label">Uptime</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="statistics-number text-danger" id="emergencyEvents">0</div>
+                                <div class="statistics-label">Emergencies</div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="statistics-label mb-1">System Performance</div>
+                            <div class="performance-bar">
+                                <div id="performanceBar" class="progress-bar bg-success" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Left Column: Crossings and Visualization -->
+            <div class="col-lg-8">
+                <!-- Crossing Status Cards -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4>
+                            <i class="bi bi-geo-alt"></i>
+                            Railway Crossings Status
+                            <small class="text-muted" id="last-update">Last updated: --:--:--</small>
+                        </h4>
+                    </div>
+                    <div class="row" id="crossings-container">
+                        <!-- Crossing cards will load here -->
+                    </div>
+                </div>
+
+                <!-- Live Visualization -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-eye"></i>
+                            Live Railway Visualization
+                            <small class="text-muted float-end" id="simulation-speed">Real-time</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="train-track" id="track-visualization">
+                            <div class="crossing-line"></div>
+                            <!-- Train and barriers will be added here -->
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    <strong>Legend:</strong>
+                                    <div class="mt-2">
+                                        <span class="badge bg-danger me-2">Train</span>
+                                        <span class="badge bg-dark me-2">Barrier</span>
+                                        <span class="badge bg-secondary">Crossing Line</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-light">
+                                    <i class="bi bi-lightbulb"></i>
+                                    <strong>Tip:</strong> Click on any crossing card to see detailed timeline
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-task"></i>
+                            Crossing Action Timeline
+                            <small class="text-muted" id="selected-crossing">(Select a crossing)</small>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="action-timeline" id="action-timeline">
+                            <!-- Timeline steps will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Controls and Logs -->
+            <div class="col-lg-4">
+                <!-- Control Panel -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-controller"></i>
+                            Control Panel
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt"></i>
+                                Select Crossing
+                            </label>
+                            <select id="crossing-select" class="form-select">
+                                <option value="0">🚂 Crossing 1</option>
+                                <option value="1">🚂 Crossing 2</option>
+                                <option value="2">🚂 Crossing 3</option>
+                                <option value="3">🚂 Crossing 4</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-cloud"></i>
+                                Weather Conditions
+                            </label>
+                            <select id="weather-select" class="form-select">
+                                <option value="CLEAR">☀️ Clear</option>
+                                <option value="RAIN">🌧️ Rainy</option>
+                                <option value="FOG">🌫️ Foggy</option>
+                                <option value="STORM">⛈️ Stormy</option>
+                            </select>
+                        </div>
+                        
+                        <hr>
+                        
+                        <h6 class="mb-3">
+                            <i class="bi bi-play-circle"></i>
+                            Manual Control
+                        </h6>
+                        
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <button class="btn btn-warning w-100 control-btn" onclick="sendCommand('approach')">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                    Train Approach
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-info w-100 control-btn" onclick="sendCommand('countdown')">
+                                    <i class="bi bi-clock"></i>
+                                    Start Countdown
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-danger w-100 control-btn" onclick="sendCommand('barrier_down')">
+                                    <i class="bi bi-arrow-down"></i>
+                                    Lower Barriers
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button class="btn btn-success w-100 control-btn" onclick="sendCommand('train_pass')">
+                                    <i class="bi bi-train-front"></i>
+                                    Train Pass
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-secondary control-btn" onclick="sendCommand('reset')">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Reset Crossing
+                            </button>
+                            <button class="btn btn-danger control-btn" onclick="sendCommand('emergency')">
+                                <i class="bi bi-exclamation-octagon"></i>
+                                Emergency Stop
+                            </button>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-grid">
+                            <button class="btn btn-primary control-btn" onclick="startSimulation()">
+                                <i class="bi bi-play-circle-fill"></i>
+                                Start Auto Simulation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Countdown Display -->
+                <div class="card mb-4" id="countdown-card" style="display: none;">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-hourglass-split"></i>
+                            Active Countdown
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="countdown-display" id="countdown-display">10</div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted" id="countdown-crossing">Crossing 1</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Logs -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-list-check"></i>
+                                System Activity Log
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="clearLogs()">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        <div id="system-logs">
+                            <div class="log-entry info">
+                                <small class="text-muted">00:00:00</small>
+                                <div>System initialized and ready</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-dark text-light py-3 mt-4">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6">
+                    <small>
+                        <i class="bi bi-cpu"></i>
+                        Railway Crossing Control System v2.0 | Professional Engineering Project
+                        <span class="badge bg-info ms-2">Predictive Maintenance Active</span>
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small id="connection-status">
+                        <span class="status-indicator status-active"></span>
+                        Connected to Server
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        class EnhancedRailwayDashboard {
+            constructor() {
+                this.apiBase = '/api';
+                this.pollingInterval = null;
+                this.selectedCrossing = 0;
+                this.activeCountdowns = new Set();
+                this.logEntries = [];
+                this.enhancedMonitoringData = {};
+                this.initialize();
+            }
+            
+            async initialize() {
+                this.updateTime();
+                await this.loadSystemStatus();
+                await this.loadDiagnostics(); // Load enhanced monitoring data
+                this.loadNextActions();
+                this.startPolling();
+                this.addLog('🚀 System initialized with predictive maintenance', 'info');
+                
+                // Add click listeners to crossing cards
+                document.addEventListener('click', (e) => {
+                    const card = e.target.closest('.crossing-card');
+                    if (card) {
+                        const crossingId = parseInt(card.dataset.crossingId);
+                        this.selectCrossing(crossingId);
+                    }
+                });
+            }
+            
+            async loadSystemStatus() {
+                try {
+                    const response = await fetch(`${this.apiBase}/system/status`);
+                    const data = await response.json();
+                    
+                    this.renderCrossings(data.crossings);
+                    this.updateSystemOverview(data.global_state);
+                    this.updateVisualization(data.crossings);
+                    this.updateLastUpdate();
+                    
+                    // Update countdowns
+                    this.updateCountdowns(data.crossings);
+                    
+                } catch (error) {
+                    console.error('Failed to load system status:', error);
+                    this.updateConnectionStatus(false);
+                }
+            }
+            
+            async loadDiagnostics() {
+                try {
+                    const response = await fetch(`${this.apiBase}/system/diagnostics`);
+                    const data = await response.json();
+                    this.enhancedMonitoringData = data;
+                    this.updateEnhancedMonitoring();
+                } catch (error) {
+                    console.error('Failed to load diagnostics:', error);
+                }
+            }
+            
+            updateEnhancedMonitoring() {
+                const data = this.enhancedMonitoringData;
+                if (!data) return;
+                
+                // Update health card
+                const health = data.system_health || 100;
+                $('#healthPercentage').text(health + '%');
+                $('#healthBar').css('width', health + '%')
+                    .attr('aria-valuenow', health.toFixed(0));
+                
+                // Update health bar color
+                $('#healthBar').removeClass('bg-success bg-warning bg-danger');
+                if (health >= 80) $('#healthBar').addClass('bg-success');
+                else if (health >= 60) $('#healthBar').addClass('bg-warning');
+                else $('#healthBar').addClass('bg-danger');
+                
+                // Update fault counts
+                const activeFaults = data.active_faults || 0;
+                $('#faultCount').text(activeFaults)
+                    .removeClass('bg-success bg-warning bg-danger')
+                    .addClass(activeFaults > 0 ? 'bg-danger' : 'bg-success');
+                
+                // Update sensor status
+                const totalSensors = 16;
+                const sensorFaults = data.sensor_faults || 0;
+                const workingSensors = totalSensors - sensorFaults;
+                $('#sensorFaults').text(workingSensors + '/' + totalSensors + ' OK')
+                    .removeClass('bg-success bg-warning bg-danger')
+                    .addClass(sensorFaults > 2 ? 'bg-danger' : 
+                             sensorFaults > 0 ? 'bg-warning' : 'bg-success');
+                
+                // Update success rate
+                const successRate = data.statistics?.success_rate || 100;
+                $('#successRate').text(successRate.toFixed(1) + '%')
+                    .removeClass('bg-success bg-warning bg-danger')
+                    .addClass(successRate >= 95 ? 'bg-success' : 
+                             successRate >= 80 ? 'bg-warning' : 'bg-danger');
+                
+                // Update maintenance card
+                const warnings = data.statistics?.maintenance_warnings || 0;
+                if (warnings > 0) {
+                    $('#maintenanceCount').text(warnings).removeClass('d-none');
+                } else {
+                    $('#maintenanceCount').addClass('d-none');
+                }
+                
+                // Update maintenance alerts
+                let maintenanceHtml = '';
+                if (data.crossing_status) {
+                    data.crossing_status.forEach(crossing => {
+                        if (crossing.maintenance_warnings && crossing.maintenance_warnings.length > 0) {
+                            crossing.maintenance_warnings.forEach(warning => {
+                                maintenanceHtml += `
+                                    <div class="alert alert-warning maintenance-alert">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Crossing ${crossing.id + 1}: ${warning}
+                                    </div>`;
+                            });
+                        }
+                    });
+                }
+                
+                if (!maintenanceHtml) {
+                    maintenanceHtml = `
+                        <div class="alert alert-success py-2">
+                            <i class="fas fa-check me-2"></i>No maintenance required
+                        </div>`;
+                }
+                $('#maintenanceAlerts').html(maintenanceHtml);
+                
+                // Update component health bars
+                let totalBarrier = 0, totalLight = 0, totalAlarm = 0, count = 0;
+                if (data.crossing_status) {
+                    data.crossing_status.forEach(crossing => {
+                        if (crossing.component_health) {
+                            totalBarrier += crossing.component_health.barrier_motor || 100;
+                            totalLight += crossing.component_health.traffic_lights || 100;
+                            totalAlarm += crossing.component_health.alarm_system || 100;
+                            count++;
+                        }
+                    });
+                }
+                
+                if (count > 0) {
+                    const avgBarrier = totalBarrier / count;
+                    const avgLight = totalLight / count;
+                    const avgAlarm = totalAlarm / count;
+                    
+                    $('#barrierHealth').css('width', avgBarrier + '%')
+                        .removeClass('bg-success bg-warning bg-danger')
+                        .addClass(avgBarrier >= 70 ? 'bg-success' : avgBarrier >= 50 ? 'bg-warning' : 'bg-danger');
+                    
+                    $('#lightHealth').css('width', avgLight + '%')
+                        .removeClass('bg-success bg-warning bg-danger')
+                        .addClass(avgLight >= 70 ? 'bg-success' : avgLight >= 50 ? 'bg-warning' : 'bg-danger');
+                    
+                    $('#alarmHealth').css('width', avgAlarm + '%')
+                        .removeClass('bg-success bg-warning bg-danger')
+                        .addClass(avgAlarm >= 70 ? 'bg-success' : avgAlarm >= 50 ? 'bg-warning' : 'bg-danger');
+                }
+                
+                // Update statistics card
+                $('#totalTrains').text(data.global_state?.total_trains || 0);
+                $('#totalOperations').text(data.statistics?.total_operations || 0);
+                
+                const uptime = data.global_state?.uptime || 0;
+                const hours = Math.floor(uptime / 3600);
+                const minutes = Math.floor((uptime % 3600) / 60);
+                $('#uptimeHours').text(hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`);
+                
+                $('#emergencyEvents').text(data.statistics?.emergency_events || 0);
+                
+                // Update performance bar
+                const performance = data.statistics?.success_rate || 100;
+                $('#performanceBar').css('width', performance + '%')
+                    .removeClass('bg-success bg-warning bg-danger')
+                    .addClass(performance >= 95 ? 'bg-success' : 
+                             performance >= 80 ? 'bg-warning' : 'bg-danger');
+            }
+            
+            renderCrossings(crossings) {
+                const container = document.getElementById('crossings-container');
+                container.innerHTML = '';
+                
+                crossings.forEach(crossing => {
+                    const card = this.createCrossingCard(crossing);
+                    container.appendChild(card);
+                });
+            }
+            
+            createCrossingCard(crossing) {
+                const div = document.createElement('div');
+                div.className = 'col-md-6 mb-3';
+                div.dataset.crossingId = crossing.id;
+                
+                const stateClass = crossing.state.toLowerCase().replace('_', '-');
+                const arrivalTime = crossing.arrival_time ? 
+                    `${crossing.arrival_time.toFixed(1)}s` : 'Not approaching';
+                
+                // Get next action
+                const nextAction = this.getNextActionText(crossing.state);
+                
+                div.innerHTML = `
+                    <div class="card state-card ${stateClass} crossing-card" data-crossing-id="${crossing.id}">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-train-front"></i>
+                                    Crossing ${crossing.id + 1}
+                                    <small class="ms-2 text-muted">
+                                        <i class="bi bi-arrow-repeat"></i> ${crossing.operation_count || 0}
+                                    </small>
+                                </h6>
+                                <span class="badge bg-${this.getStateColor(crossing.state)}">
+                                    ${crossing.state.replace('_', ' ')}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Barrier Status</small>
+                                    <div>
+                                        <strong>${crossing.barrier}</strong>
+                                        ${crossing.barrier === 'DOWN' ? ' ⚠️' : ' ✅'}
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Train</small>
+                                    <div>
+                                        ${crossing.train_position > 0 ? 
+                                            `<span class="badge bg-danger">Present</span>` : 
+                                            `<span class="badge bg-secondary">Absent</span>`}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Speed</small>
+                                    <div>${crossing.train_speed.toFixed(0)} km/h</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Arrival</small>
+                                    <div>${arrivalTime}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">Next Action</small>
+                                <div class="text-${this.getStateColor(crossing.state)}">
+                                    <small><i>${nextAction}</i></small>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    ${Object.entries(crossing.sensor_health).map(([sensor, healthy]) => `
+                                        <span class="badge ${healthy ? 'bg-success' : 'bg-danger'} me-1" 
+                                              title="${sensor}: ${healthy ? 'OK' : 'FAULT'}">
+                                            ${sensor.substring(0, 2)}
+                                        </span>
+                                    `).join('')}
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" 
+                                        onclick="dashboard.selectCrossing(${crossing.id})">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                            
+                            ${crossing.countdown > 0 && crossing.state === 'COUNTDOWN' ? `
+                                <div class="mt-2">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             style="width: ${(crossing.countdown / 10) * 100}%">
+                                            ${crossing.countdown}s
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                return div;
+            }
+            
+            getNextActionText(state) {
+                const actions = {
+                    'IDLE': 'Waiting for train approach...',
+                    'WARNING': 'Countdown will start soon...',
+                    'COUNTDOWN': 'Barriers will lower when countdown ends',
+                    'BARRIER_DOWN': 'Train will pass through...',
+                    'TRAIN_PASSING': 'Barriers will raise after train passes',
+                    'EMERGENCY': 'EMERGENCY MODE - Manual intervention required',
+                    'MAINTENANCE': 'Maintenance in progress'
+                };
+                return actions[state] || 'Unknown state';
+            }
+            
+            getStateColor(state) {
+                const colors = {
+                    'IDLE': 'success',
+                    'WARNING': 'warning',
+                    'COUNTDOWN': 'info',
+                    'BARRIER_DOWN': 'primary',
+                    'TRAIN_PASSING': 'secondary',
+                    'EMERGENCY': 'danger',
+                    'MAINTENANCE': 'dark'
+                };
+                return colors[state] || 'secondary';
+            }
+            
+            selectCrossing(crossingId) {
+                this.selectedCrossing = crossingId;
+                document.getElementById('crossing-select').value = crossingId;
+                document.getElementById('selected-crossing').textContent = `(Crossing ${crossingId + 1})`;
+                this.loadNextActions();
+                this.addLog(`🔍 Selected Crossing ${crossingId + 1} for detailed view`, 'info');
+            }
+            
+            async sendCommand(command) {
+                const crossingId = document.getElementById('crossing-select').value;
+                const weather = document.getElementById('weather-select').value;
+                
+                const params = {
+                    train_speed: Math.floor(Math.random() * 80) + 20, // 20-100 km/h
+                    train_distance: Math.floor(Math.random() * 200) + 50, // 50-250m
+                    weather: weather
+                };
+                
+                this.addLog(`⚡ Sending command: ${command} to Crossing ${parseInt(crossingId) + 1}`, 'info');
+                
+                try {
+                    const response = await fetch(`${this.apiBase}/system/command`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            crossing_id: parseInt(crossingId),
+                            command: command,
+                            parameters: params
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const actionNames = {
+                            'approach': 'Train Approach',
+                            'countdown': 'Start Countdown',
+                            'barrier_down': 'Lower Barriers',
+                            'train_pass': 'Train Pass',
+                            'reset': 'Reset',
+                            'emergency': 'Emergency Stop'
+                        };
+                        
+                        this.addLog(`✅ ${actionNames[command]} executed on Crossing ${parseInt(crossingId) + 1}`, 'success');
+                        await this.loadSystemStatus();
+                        await this.loadDiagnostics();
+                        this.loadNextActions();
+                    } else {
+                        this.addLog(`❌ Command failed: ${result.error}`, 'danger');
+                    }
+                    
+                } catch (error) {
+                    console.error('Command failed:', error);
+                    this.addLog('❌ Network error - Command failed', 'danger');
+                }
+            }
+            
+            async startSimulation() {
+                this.addLog('▶️ Starting auto simulation...', 'info');
+                
+                try {
+                    const response = await fetch(`${this.apiBase}/system/simulation/start`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        this.addLog('🚂 Auto simulation started! System will run through scenarios.', 'success');
+                        document.getElementById('simulation-speed').textContent = 'Simulation Active';
+                    }
+                } catch (error) {
+                    console.error('Simulation failed:', error);
+                    this.addLog('❌ Failed to start simulation', 'danger');
+                }
+            }
+            
+            addLog(message, type = 'info') {
+                const logsDiv = document.getElementById('system-logs');
+                const timestamp = new Date().toLocaleTimeString();
+                
+                const icon = {
+                    'info': 'ℹ️',
+                    'success': '✅',
+                    'warning': '⚠️',
+                    'danger': '❌'
+                }[type] || 'ℹ️';
+                
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry ${type}`;
+                logEntry.innerHTML = `
+                    <small class="text-muted">${timestamp}</small>
+                    <div>${icon} ${message}</div>
+                `;
+                
+                logsDiv.prepend(logEntry);
+                this.logEntries.unshift({timestamp, message, type});
+                
+                // Keep only last 15 logs
+                if (logsDiv.children.length > 15) {
+                    logsDiv.removeChild(logsDiv.lastChild);
+                    this.logEntries.pop();
+                }
+            }
+            
+            clearLogs() {
+                const logsDiv = document.getElementById('system-logs');
+                logsDiv.innerHTML = `
+                    <div class="log-entry info">
+                        <small class="text-muted">${new Date().toLocaleTimeString()}</small>
+                        <div>ℹ️ Logs cleared</div>
+                    </div>
+                `;
+                this.logEntries = [];
+            }
+            
+            startPolling() {
+                this.pollingInterval = setInterval(() => {
+                    this.loadSystemStatus();
+                    this.loadDiagnostics();
+                    this.updateTime();
+                }, 2000); // Update every 2 seconds
+            }
+            
+            updateSystemOverview(globalState) {
+                // Update overview cards
+                document.getElementById('total-trains').textContent = globalState.total_trains;
+                document.getElementById('system-uptime').textContent = `${globalState.uptime}s`;
+                document.getElementById('emergency-status').textContent = 
+                    globalState.emergency ? 'YES ⚠️' : 'No ✅';
+                document.getElementById('emergency-status').className = 
+                    globalState.emergency ? 'number text-danger' : 'number text-success';
+                
+                // Update system health in navbar
+                const health = globalState.system_health;
+                document.getElementById('system-health').textContent = `System Health: ${health.toFixed(1)}%`;
+                document.getElementById('system-health').className = 
+                    `text-${health > 70 ? 'success' : health > 40 ? 'warning' : 'danger'}`;
+                
+                // Update active crossings count
+                const activeCrossings = document.querySelectorAll('.state-card:not(.idle):not(.maintenance)').length;
+                document.getElementById('active-crossings').textContent = activeCrossings;
+                document.getElementById('active-crossings').className = 
+                    `number ${activeCrossings > 0 ? 'text-warning' : 'text-success'}`;
+            }
+            
+            updateVisualization(crossings) {
+                const track = document.getElementById('track-visualization');
+                
+                // Clear previous visualization except the crossing line
+                const crossingLine = track.querySelector('.crossing-line');
+                track.innerHTML = '';
+                if (crossingLine) track.appendChild(crossingLine);
+                
+                // Create barriers (always visible)
+                const barrierPositions = ['25%', '50%', '75%'];
+                barrierPositions.forEach(pos => {
+                    const barrier = document.createElement('div');
+                    barrier.className = 'barrier';
+                    barrier.style.left = pos;
+                    
+                    // Check if any crossing has barriers down
+                    const anyBarrierDown = crossings.some(c => c.barrier === 'DOWN');
+                    const angle = anyBarrierDown ? '45deg' : '0deg';
+                    const origin = pos === '75%' ? 'right center' : 'left center';
+                    
+                    barrier.style.transform = `rotate(${angle})`;
+                    barrier.style.transformOrigin = origin;
+                    
+                    track.appendChild(barrier);
+                });
+                
+                // Create trains for active crossings
+                crossings.forEach((crossing, index) => {
+                    if (crossing.train_position > -100 && crossing.train_position <= 100) {
+                        const train = document.createElement('div');
+                        train.className = 'train';
+                        train.id = `train-${index}`;
+                        
+                        // Calculate position (convert -100 to 100 scale to 0 to 100%)
+                        const position = ((crossing.train_position + 100) / 200) * 100;
+                        train.style.left = `${position}%`;
+                        
+                        // Color based on state
+                        const colors = {
+                            'EMERGENCY': 'linear-gradient(135deg, #dc3545 0%, #a71d2a 100%)',
+                            'WARNING': 'linear-gradient(135deg, #ffc107 0%, #e0a800 100%)',
+                            'COUNTDOWN': 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                            'BARRIER_DOWN': 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+                            'TRAIN_PASSING': 'linear-gradient(135deg, #6c757d 0%, #495057 100%)',
+                            'IDLE': 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)'
+                        };
+                        
+                        train.style.background = colors[crossing.state] || colors['IDLE'];
+                        train.textContent = crossing.id + 1;
+                        
+                        track.appendChild(train);
+                    }
+                });
+            }
+            
+            updateCountdowns(crossings) {
+                const countdownCard = document.getElementById('countdown-card');
+                let activeCountdown = null;
+                
+                crossings.forEach(crossing => {
+                    if (crossing.state === 'COUNTDOWN' && crossing.countdown > 0) {
+                        activeCountdown = crossing;
+                    }
+                });
+                
+                if (activeCountdown) {
+                    countdownCard.style.display = 'block';
+                    document.getElementById('countdown-display').textContent = 
+                        `${activeCountdown.countdown}s`;
+                    document.getElementById('countdown-crossing').textContent = 
+                        `Crossing ${activeCountdown.id + 1}`;
+                } else {
+                    countdownCard.style.display = 'none';
+                }
+            }
+            
+            async loadNextActions() {
+                try {
+                    const response = await fetch(`${this.apiBase}/system/next-actions`);
+                    const actions = await response.json();
+                    this.updateActionTimeline(actions);
+                } catch (error) {
+                    console.error('Failed to load next actions:', error);
+                }
+            }
+            
+            updateActionTimeline(actions) {
+                const timeline = document.getElementById('action-timeline');
+                const selectedActions = actions[this.selectedCrossing];
+                
+                if (!selectedActions) {
+                    timeline.innerHTML = '<div class="text-muted">Select a crossing to see timeline</div>';
+                    return;
+                }
+                
+                const steps = this.getTimelineSteps(selectedActions.current_state);
+                
+                timeline.innerHTML = steps.map((step, index) => {
+                    const isCurrent = step.state === selectedActions.current_state;
+                    const isCompleted = this.isStepCompleted(step.state, selectedActions.current_state);
+                    
+                    return `
+                        <div class="action-step ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>${step.title}</strong>
+                                    <div class="text-muted" style="font-size: 0.9em;">${step.description}</div>
+                                </div>
+                                ${isCurrent ? '<span class="badge bg-primary">Current</span>' : 
+                                  isCompleted ? '<span class="badge bg-success">✓ Done</span>' : 
+                                  '<span class="badge bg-secondary">Pending</span>'}
+                            </div>
+                            ${isCurrent && selectedActions.estimated_time ? `
+                                <div class="mt-2">
+                                    <small class="text-info">
+                                        <i class="bi bi-clock"></i>
+                                        Estimated time: ${selectedActions.estimated_time.toFixed(1)}s
+                                    </small>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            getTimelineSteps(currentState) {
+                return [
+                    {
+                        state: 'IDLE',
+                        title: '1. Idle State',
+                        description: 'Crossing is clear, waiting for train detection'
+                    },
+                    {
+                        state: 'WARNING',
+                        title: '2. Warning Activated',
+                        description: 'Train detected, warning lights and alarms activated'
+                    },
+                    {
+                        state: 'COUNTDOWN',
+                        title: '3. Countdown Started',
+                        description: 'Visual countdown displayed for road users'
+                    },
+                    {
+                        state: 'BARRIER_DOWN',
+                        title: '4. Barriers Lowered',
+                        description: 'Safety barriers fully lowered, road blocked'
+                    },
+                    {
+                        state: 'TRAIN_PASSING',
+                        title: '5. Train Passing',
+                        description: 'Train safely passes through the crossing'
+                    },
+                    {
+                        state: 'IDLE',
+                        title: '6. Reset Complete',
+                        description: 'Barriers raised, crossing returns to idle state'
+                    }
+                ];
+            }
+            
+            isStepCompleted(stepState, currentState) {
+                const order = ['IDLE', 'WARNING', 'COUNTDOWN', 'BARRIER_DOWN', 'TRAIN_PASSING'];
+                const currentIndex = order.indexOf(currentState);
+                const stepIndex = order.indexOf(stepState);
+                
+                // If we're in emergency, nothing is completed
+                if (currentState === 'EMERGENCY') return false;
+                
+                return stepIndex < currentIndex || 
+                      (currentState === 'IDLE' && stepState === 'IDLE' && stepIndex === 0);
+            }
+            
+            updateTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                document.getElementById('current-time').textContent = timeString;
+            }
+            
+            updateLastUpdate() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('en-US', { 
+                    hour12: false,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                document.getElementById('last-update').textContent = `Last updated: ${timeString}`;
+            }
+            
+            updateConnectionStatus(connected) {
+                const statusElement = document.getElementById('connection-status');
+                const indicator = statusElement.querySelector('.status-indicator');
+                
+                if (connected) {
+                    indicator.className = 'status-indicator status-active';
+                    statusElement.innerHTML = '<span class="status-indicator status-active"></span> Connected to Server';
+                } else {
+                    indicator.className = 'status-indicator';
+                    indicator.style.background = '#dc3545';
+                    statusElement.innerHTML = '<span class="status-indicator" style="background: #dc3545;"></span> Connection Lost';
+                }
+            }
+        }
+        
+        // Initialize dashboard
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new EnhancedRailwayDashboard();
+        });
+        
+        // Global functions for buttons
+        function sendCommand(command) {
+            if (dashboard) dashboard.sendCommand(command);
+        }
+        
+        function startSimulation() {
+            if (dashboard) dashboard.startSimulation();
+        }
+        
+        function clearLogs() {
+            if (dashboard) dashboard.clearLogs();
+        }
+    </script>
+</body>
+</html>
