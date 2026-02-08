@@ -14,6 +14,7 @@ from enum import Enum
 import json
 import random
 import os
+from vcdvcd import VCDVCD
 
 # Configure logging
 logging.basicConfig(
@@ -923,7 +924,10 @@ class RailwaySystem:
             'average_health': 100.0,
             'last_updated': datetime.now().isoformat(),
             'success_rate': 100.0,
-            'maintenance_warnings': 0
+            'maintenance_warnings': 0,
+            'hardware_score': 0,
+            'hardware_rank': 'N/A',
+            'system_efficiency': 100.0
         }
         self._initialize_crossings()
         
@@ -1338,10 +1342,133 @@ def reset_system():
 def not_found(error):
     return jsonify({'success': False, 'error': 'Not found'}), 404
 
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Internal server error: {error}")
-    return jsonify({'success': False, 'error': 'Internal server error'}), 500
+import subprocess
+import re
+
+# ... existing code ...
+
+@app.route('/api/verilog/run', methods=['POST'])
+def run_verilog_sim():
+    """Run the Verilog Hardware Tycoon simulation and return results"""
+    try:
+        # Paths to files
+        verilog_dir = os.path.join(os.path.dirname(__file__), '..', 'verilog')
+        tests_dir = os.path.join(os.path.dirname(__file__), '..', 'tests')
+        iverilog_path = r'C:\iverilog\bin\iverilog.exe'
+        vvp_path = r'C:\iverilog\bin\vvp.exe'
+        
+        if not os.path.exists(iverilog_path):
+            return jsonify({
+                'success': False, 
+                'error': 'Icarus Verilog not found at C:\\iverilog'
+            }), 404
+
+        # 1. Compile
+        compile_cmd = [
+            iverilog_path, '-g2012', '-o', 'game.vvp',
+            os.path.join(verilog_dir, 'railway_system_top.v'),
+            os.path.join(verilog_dir, 'railway_controller_main.v'),
+            os.path.join(verilog_dir, 'sensor_fusion_voter.v'),
+            os.path.join(verilog_dir, 'train_speed_estimator.v'),
+            os.path.join(verilog_dir, 'statistics_engine.v'),
+            os.path.join(tests_dir, 'testbench_game_runner.v')
+        ]
+        
+        comp_proc = subprocess.run(compile_cmd, capture_output=True, text=True, cwd=os.path.dirname(__file__))
+        if comp_proc.returncode != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Compilation failed: {comp_proc.stderr}'
+            }), 500
+
+        # 2. Run simulation
+        run_proc = subprocess.run([vvp_path, 'game.vvp'], capture_output=True, text=True, cwd=os.path.dirname(__file__))
+        output = run_proc.stdout
+        
+        # 3. Parse output for score
+        # Example: GAME OVER - Final Score: 81%
+        score_match = re.search(r'Final Score: (\d+)%', output)
+        rank_match = re.search(r'RANK: (\w+)', output)
+        
+        score = int(score_match.group(1)) if score_match else 0
+        rank = rank_match.group(1) if rank_match else "N/A"
+        
+        # 4. Parse VCD for timeline
+        timeline = []
+        try:
+            vcd_path = os.path.join(os.path.dirname(__file__), 'game.vcd')
+            if os.path.exists(vcd_path):
+                vcd = VCDVCD(vcd_path)
+                # Find signal with flexible name matching
+                sig_name = None
+                for k in vcd.signals:
+                    if "crossing_states" in k and ("uut" in k or "main_ctrl" in k):
+                        sig_name = k
+                        break
+                
+                if sig_name:
+                    logger.info(f"VCD: Signal {sig_name} found, processing transitions")
+                    state_map = {
+                        0: "IDLE", 1: "WARNING", 2: "COUNTDOWN", 
+                        3: "BARRIER_DN", 4: "TRAIN_PASS", 6: "EMERGENCY", 
+                        7: "MAINTENANCE"
+                    }
+                    # Sample every change
+                    last_states = None
+                    for t, val in vcd[sig_name].tv:
+                        current_states = []
+                        try:
+                            # Robust bit string/int conversion
+                            v_str = str(val)
+                            if 'x' in v_str.lower() or 'z' in v_str.lower():
+                                v_int = 0
+                            else:
+                                # vcdvcd often returns 'b1010' or just '1010'
+                                raw_val = v_str.replace('b', '')
+                                v_int = int(raw_val, 2)
+                        except:
+                            v_int = val if isinstance(val, int) else 0
+                            
+                        for i in range(4):
+                            s_val = (v_int >> (i * 3)) & 0x7
+                            current_states.append(state_map.get(s_val, f"UNKNOWN_{s_val}"))
+                        
+                        if current_states != last_states:
+                            timeline.append({
+                                'time': int(t / 1000), # Convert ps to ns/1000 or similar based on timescale
+                                'states': current_states
+                            })
+                            last_states = current_states
+        except Exception as ve:
+            logger.error(f"VCD parsing error: {ve}")
+
+        # Update global system statistics
+        system.statistics['hardware_score'] = score
+        system.statistics['hardware_rank'] = rank
+        system.statistics['system_efficiency'] = score  # Sync hardware score to efficiency
+        system.statistics['last_updated'] = datetime.now().isoformat()
+        
+        # Add to logs
+        system.logger.log_event('USER_COMMAND', details=f"Hardware Simulation Complete: Score {score}%, Rank {rank}")
+
+        # Clean up
+        for f in ['game.vvp', 'game.vcd']:
+            p = os.path.join(os.path.dirname(__file__), f)
+            if os.path.exists(p):
+                os.remove(p)
+
+        return jsonify({
+            'success': True,
+            'score': score,
+            'rank': rank,
+            'timeline': timeline,
+            'raw_output': output,
+            'timestamp': datetime.now().strftime("%H:%M:%S")
+        })
+
+    except Exception as e:
+        logger.error(f"Verilog simulation error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # =============== MAIN ===============
 if __name__ == '__main__':

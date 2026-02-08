@@ -53,12 +53,18 @@ generate
             if (!rst_n) begin
                 current_state[j] <= IDLE;
                 counters[j] <= 0;
+                countdowns[j] <= 10;
             end else begin
-                current_state[j] <= next_state[j];
-                counters[j] <= counters[j] + 1;
+                if (current_state[j] != next_state[j]) begin
+                    current_state[j] <= next_state[j];
+                    counters[j] <= 0; // Reset counter on state change
+                end else begin
+                    counters[j] <= counters[j] + 1;
+                end
                 
                 if (current_state[j] == COUNTDOWN) begin
-                    if (counters[j][4:0] == 5'b11111) begin
+                    // Flashing/tick logic for countdown
+                    if (counters[j][3:0] == 4'b1111) begin
                         if (countdowns[j] > 0) 
                             countdowns[j] <= countdowns[j] - 1;
                     end
@@ -76,11 +82,12 @@ generate
             end else begin
                 case(current_state[j])
                     IDLE: if (train_detected[j]) next_state[j] = WARNING;
-                    WARNING: if (counters[j][23:20] == 5) next_state[j] = COUNTDOWN;
+                    WARNING: if (counters[j] > 50) next_state[j] = COUNTDOWN; // Shortened for simulation
                     COUNTDOWN: if (countdowns[j] == 0) next_state[j] = BARRIER_DN;
-                    BARRIER_DN: if (counters[j][2:0] == 3) next_state[j] = TRAIN_PASS;
+                    BARRIER_DN: if (counters[j] > 20) next_state[j] = TRAIN_PASS; // Shortened for simulation
                     TRAIN_PASS: if (train_exited[j]) next_state[j] = IDLE;
                     EMERGENCY: if (!emergency_global) next_state[j] = IDLE;
+                    default: next_state[j] = IDLE;
                 endcase
             end
         end

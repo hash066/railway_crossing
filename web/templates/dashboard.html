@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,14 +18,14 @@
             --state-emergency: #dc3545;
             --state-maintenance: #343a40;
         }
-        
+
         .state-card {
             transition: all 0.3s;
             border-left: 5px solid #6c757d;
             position: relative;
             overflow: hidden;
         }
-        
+
         .state-card::before {
             content: '';
             position: absolute;
@@ -35,33 +36,75 @@
             background: currentColor;
             opacity: 0.3;
         }
-        
-        .state-card.idle { border-left-color: var(--state-idle); color: var(--state-idle); }
-        .state-card.warning { border-left-color: var(--state-warning); color: var(--state-warning); }
-        .state-card.countdown { border-left-color: var(--state-countdown); color: var(--state-countdown); }
-        .state-card.barrier-down { border-left-color: var(--state-barrier-down); color: var(--state-barrier-down); }
-        .state-card.train-passing { border-left-color: var(--state-train-passing); color: var(--state-train-passing); }
-        .state-card.emergency { border-left-color: var(--state-emergency); color: var(--state-emergency); }
-        .state-card.maintenance { border-left-color: var(--state-maintenance); color: var(--state-maintenance); }
-        
-        .state-card.warning, .state-card.countdown {
+
+        .state-card.idle {
+            border-left-color: var(--state-idle);
+            color: var(--state-idle);
+        }
+
+        .state-card.warning {
+            border-left-color: var(--state-warning);
+            color: var(--state-warning);
+        }
+
+        .state-card.countdown {
+            border-left-color: var(--state-countdown);
+            color: var(--state-countdown);
+        }
+
+        .state-card.barrier-down {
+            border-left-color: var(--state-barrier-down);
+            color: var(--state-barrier-down);
+        }
+
+        .state-card.train-passing {
+            border-left-color: var(--state-train-passing);
+            color: var(--state-train-passing);
+        }
+
+        .state-card.emergency {
+            border-left-color: var(--state-emergency);
+            color: var(--state-emergency);
+        }
+
+        .state-card.maintenance {
+            border-left-color: var(--state-maintenance);
+            color: var(--state-maintenance);
+        }
+
+        .state-card.warning,
+        .state-card.countdown {
             animation: pulse 2s infinite;
         }
-        
+
         .state-card.emergency {
             animation: pulse-danger 1s infinite;
         }
-        
+
         @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+            }
         }
-        
+
         @keyframes pulse-danger {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+            }
         }
-        
+
         .status-indicator {
             width: 12px;
             height: 12px;
@@ -69,15 +112,28 @@
             display: inline-block;
             margin-right: 5px;
         }
-        
-        .status-active { background: #28a745; animation: blink 1s infinite; }
-        .status-inactive { background: #6c757d; }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+        .status-active {
+            background: #28a745;
+            animation: blink 1s infinite;
         }
-        
+
+        .status-inactive {
+            background: #6c757d;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
         .train-track {
             height: 120px;
             background: linear-gradient(90deg, #e9ecef 0%, #dee2e6 100%);
@@ -87,7 +143,7 @@
             border: 2px solid #adb5bd;
             overflow: hidden;
         }
-        
+
         .train-track::before {
             content: '';
             position: absolute;
@@ -95,16 +151,14 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: repeating-linear-gradient(
-                90deg,
-                #495057 0,
-                #495057 10px,
-                transparent 10px,
-                transparent 20px
-            );
+            background: repeating-linear-gradient(90deg,
+                    #495057 0,
+                    #495057 10px,
+                    transparent 10px,
+                    transparent 20px);
             transform: translateY(-50%);
         }
-        
+
         .train {
             position: absolute;
             top: 50%;
@@ -120,9 +174,9 @@
             color: white;
             font-weight: bold;
             font-size: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
-        
+
         .train::after {
             content: '';
             position: absolute;
@@ -134,7 +188,7 @@
             border-radius: 50%;
             transform: translateY(-50%);
         }
-        
+
         .barrier {
             position: absolute;
             top: 50%;
@@ -145,31 +199,29 @@
             transition: transform 1s ease;
             z-index: 1;
             border-radius: 4px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
-        
+
         .crossing-line {
             position: absolute;
             top: 50%;
             width: 100%;
             height: 2px;
-            background: repeating-linear-gradient(
-                90deg,
-                transparent 0,
-                transparent 5px,
-                #dc3545 5px,
-                #dc3545 10px
-            );
+            background: repeating-linear-gradient(90deg,
+                    transparent 0,
+                    transparent 5px,
+                    #dc3545 5px,
+                    #dc3545 10px);
             transform: translateY(-50%);
             z-index: 0;
         }
-        
+
         .action-timeline {
             position: relative;
             padding-left: 30px;
             margin: 10px 0;
         }
-        
+
         .action-timeline::before {
             content: '';
             position: absolute;
@@ -179,7 +231,7 @@
             width: 2px;
             background: #dee2e6;
         }
-        
+
         .action-step {
             position: relative;
             margin-bottom: 15px;
@@ -188,7 +240,7 @@
             border-radius: 6px;
             border-left: 3px solid #6c757d;
         }
-        
+
         .action-step::before {
             content: '';
             position: absolute;
@@ -200,25 +252,25 @@
             border-radius: 50%;
             transform: translateY(-50%);
         }
-        
+
         .action-step.current {
             border-left-color: #007bff;
             background: #e7f1ff;
         }
-        
+
         .action-step.current::before {
             background: #007bff;
-            box-shadow: 0 0 0 3px rgba(0,123,255,0.2);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
         }
-        
+
         .action-step.completed {
             border-left-color: #28a745;
         }
-        
+
         .action-step.completed::before {
             background: #28a745;
         }
-        
+
         .countdown-display {
             font-size: 2rem;
             font-weight: bold;
@@ -229,7 +281,7 @@
             border-radius: 8px;
             font-family: 'Courier New', monospace;
         }
-        
+
         .log-entry {
             padding: 8px 12px;
             margin-bottom: 5px;
@@ -238,48 +290,63 @@
             background: #f8f9fa;
             font-size: 0.9em;
         }
-        
-        .log-entry.info { border-left-color: #17a2b8; }
-        .log-entry.success { border-left-color: #28a745; }
-        .log-entry.warning { border-left-color: #ffc107; }
-        .log-entry.danger { border-left-color: #dc3545; }
-        .log-entry.emergency { border-left-color: #dc3545; background: #f8d7da; }
-        
+
+        .log-entry.info {
+            border-left-color: #17a2b8;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.warning {
+            border-left-color: #ffc107;
+        }
+
+        .log-entry.danger {
+            border-left-color: #dc3545;
+        }
+
+        .log-entry.emergency {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
         .system-overview {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 10px;
             margin-bottom: 20px;
         }
-        
+
         .overview-card {
             text-align: center;
             padding: 15px;
             border-radius: 8px;
             background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .overview-card .number {
             font-size: 1.5rem;
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
+
         .overview-card .label {
             font-size: 0.8rem;
             color: #6c757d;
         }
-        
+
         .control-btn {
             transition: all 0.2s;
         }
-        
+
         .control-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
-        
+
         .state-flow {
             display: flex;
             justify-content: space-between;
@@ -289,14 +356,14 @@
             background: #f8f9fa;
             border-radius: 8px;
         }
-        
+
         .state-step {
             text-align: center;
             padding: 10px;
             flex: 1;
             position: relative;
         }
-        
+
         .state-step::after {
             content: '→';
             position: absolute;
@@ -305,46 +372,46 @@
             transform: translateY(-50%);
             color: #6c757d;
         }
-        
+
         .state-step:last-child::after {
             display: none;
         }
-        
+
         .state-step.active {
             font-weight: bold;
             color: #007bff;
         }
-        
+
         .state-step.completed {
             color: #28a745;
         }
-        
+
         /* Enhanced Monitoring Styles */
         .monitoring-card {
             height: 100%;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: none;
             transition: transform 0.3s ease;
         }
-        
+
         .monitoring-card:hover {
             transform: translateY(-5px);
         }
-        
+
         .health-indicator {
             position: relative;
         }
-        
+
         .health-indicator .progress {
             overflow: visible;
             position: relative;
         }
-        
+
         .health-indicator .progress-bar {
             position: relative;
             border-radius: 5px;
         }
-        
+
         .health-indicator .progress-bar::after {
             content: attr(aria-valuenow) '%';
             position: absolute;
@@ -355,61 +422,62 @@
             font-weight: bold;
             font-size: 0.9em;
         }
-        
+
         .component-health .progress {
             margin-bottom: 10px;
         }
-        
+
         .component-health small {
             display: block;
             margin-bottom: 5px;
             font-size: 0.8em;
             color: #666;
         }
-        
+
         .statistics-number {
             font-size: 1.8rem;
             font-weight: bold;
             line-height: 1.2;
         }
-        
+
         .statistics-label {
             font-size: 0.8rem;
             color: #6c757d;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .maintenance-alert {
             padding: 8px 12px;
             margin-bottom: 8px;
             border-radius: 6px;
             font-size: 0.85rem;
         }
-        
+
         .performance-bar {
             position: relative;
             height: 25px;
             border-radius: 12px;
             overflow: hidden;
         }
-        
+
         .performance-bar .progress-bar {
             border-radius: 12px;
         }
-        
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .system-overview {
                 grid-template-columns: repeat(2, 1fr);
             }
-            
+
             .statistics-number {
                 font-size: 1.5rem;
             }
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container-fluid">
@@ -473,7 +541,8 @@
                         </div>
                         <div id="healthDetails">
                             <div class="d-flex justify-content-between mb-2">
-                                <span><i class="fas fa-exclamation-triangle text-warning me-1"></i> Active Faults:</span>
+                                <span><i class="fas fa-exclamation-triangle text-warning me-1"></i> Active
+                                    Faults:</span>
                                 <span id="faultCount" class="badge bg-success">0</span>
                             </div>
                             <div class="d-flex justify-content-between mb-2">
@@ -488,7 +557,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Predictive Maintenance Card -->
             <div class="col-md-4 mb-3">
                 <div class="card monitoring-card">
@@ -519,7 +588,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Statistics Card -->
             <div class="col-md-4 mb-3">
                 <div class="card monitoring-card">
@@ -651,7 +720,7 @@
                                 <option value="3">🚂 Crossing 4</option>
                             </select>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">
                                 <i class="bi bi-cloud"></i>
@@ -664,14 +733,14 @@
                                 <option value="STORM">⛈️ Stormy</option>
                             </select>
                         </div>
-                        
+
                         <hr>
-                        
+
                         <h6 class="mb-3">
                             <i class="bi bi-play-circle"></i>
                             Manual Control
                         </h6>
-                        
+
                         <div class="row g-2 mb-3">
                             <div class="col-6">
                                 <button class="btn btn-warning w-100 control-btn" onclick="sendCommand('approach')">
@@ -698,7 +767,7 @@
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div class="d-grid gap-2">
                             <button class="btn btn-secondary control-btn" onclick="sendCommand('reset')">
                                 <i class="bi bi-arrow-clockwise"></i>
@@ -709,13 +778,39 @@
                                 Emergency Stop
                             </button>
                         </div>
-                        
+
                         <hr>
-                        
-                        <div class="d-grid">
+
+                        <div class="d-grid mb-2">
                             <button class="btn btn-primary control-btn" onclick="startSimulation()">
                                 <i class="bi bi-play-circle-fill"></i>
                                 Start Auto Simulation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hardware Tycoon Section -->
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cpu"></i>
+                            Hardware Tycoon (Verilog)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">Run the 100% Verilog hardware logic against chaos scenarios.</p>
+                        <div id="verilog-result" class="alert alert-secondary d-none mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong>Score: <span id="v-score">0</span>%</strong>
+                                <span class="badge bg-light text-dark" id="v-rank">Rank: -</span>
+                            </div>
+                            <small class="d-block mt-1" id="v-time"></small>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-outline-primary" id="run-verilog-btn" onclick="runVerilogSim()">
+                                <i class="bi bi-lightning-charge"></i>
+                                Launch Hardware Test
                             </button>
                         </div>
                     </div>
@@ -738,7 +833,7 @@
                 </div>
 
                 <!-- System Logs -->
-                <div class="card">
+                <div class="card mb-4">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
@@ -757,6 +852,32 @@
                                 <div>System initialized and ready</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Hardware FSM Timeline (Verilog) -->
+                <div id="verilog-timeline-card" class="card d-none">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-cpu"></i>
+                            Verilog Hardware FSM Timeline
+                        </h5>
+                    </div>
+                    <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>Time (µs)</th>
+                                    <th>C1</th>
+                                    <th>C2</th>
+                                    <th>C3</th>
+                                    <th>C4</th>
+                                </tr>
+                            </thead>
+                            <tbody id="verilog-timeline-body">
+                                <!-- Data injected here -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -794,7 +915,7 @@
                 this.enhancedMonitoringData = {};
                 this.initialize();
             }
-            
+
             async initialize() {
                 this.updateTime();
                 await this.loadSystemStatus();
@@ -802,7 +923,7 @@
                 this.loadNextActions();
                 this.startPolling();
                 this.addLog('🚀 System initialized with predictive maintenance', 'info');
-                
+
                 // Add click listeners to crossing cards
                 document.addEventListener('click', (e) => {
                     const card = e.target.closest('.crossing-card');
@@ -812,26 +933,26 @@
                     }
                 });
             }
-            
+
             async loadSystemStatus() {
                 try {
                     const response = await fetch(`${this.apiBase}/system/status`);
                     const data = await response.json();
-                    
+
                     this.renderCrossings(data.crossings);
                     this.updateSystemOverview(data.global_state);
                     this.updateVisualization(data.crossings);
                     this.updateLastUpdate();
-                    
+
                     // Update countdowns
                     this.updateCountdowns(data.crossings);
-                    
+
                 } catch (error) {
                     console.error('Failed to load system status:', error);
                     this.updateConnectionStatus(false);
                 }
             }
-            
+
             async loadDiagnostics() {
                 try {
                     const response = await fetch(`${this.apiBase}/system/diagnostics`);
@@ -842,45 +963,45 @@
                     console.error('Failed to load diagnostics:', error);
                 }
             }
-            
+
             updateEnhancedMonitoring() {
                 const data = this.enhancedMonitoringData;
                 if (!data) return;
-                
+
                 // Update health card
                 const health = data.system_health || 100;
                 $('#healthPercentage').text(health + '%');
                 $('#healthBar').css('width', health + '%')
                     .attr('aria-valuenow', health.toFixed(0));
-                
+
                 // Update health bar color
                 $('#healthBar').removeClass('bg-success bg-warning bg-danger');
                 if (health >= 80) $('#healthBar').addClass('bg-success');
                 else if (health >= 60) $('#healthBar').addClass('bg-warning');
                 else $('#healthBar').addClass('bg-danger');
-                
+
                 // Update fault counts
                 const activeFaults = data.active_faults || 0;
                 $('#faultCount').text(activeFaults)
                     .removeClass('bg-success bg-warning bg-danger')
                     .addClass(activeFaults > 0 ? 'bg-danger' : 'bg-success');
-                
+
                 // Update sensor status
                 const totalSensors = 16;
                 const sensorFaults = data.sensor_faults || 0;
                 const workingSensors = totalSensors - sensorFaults;
                 $('#sensorFaults').text(workingSensors + '/' + totalSensors + ' OK')
                     .removeClass('bg-success bg-warning bg-danger')
-                    .addClass(sensorFaults > 2 ? 'bg-danger' : 
-                             sensorFaults > 0 ? 'bg-warning' : 'bg-success');
-                
+                    .addClass(sensorFaults > 2 ? 'bg-danger' :
+                        sensorFaults > 0 ? 'bg-warning' : 'bg-success');
+
                 // Update success rate
                 const successRate = data.statistics?.success_rate || 100;
                 $('#successRate').text(successRate.toFixed(1) + '%')
                     .removeClass('bg-success bg-warning bg-danger')
-                    .addClass(successRate >= 95 ? 'bg-success' : 
-                             successRate >= 80 ? 'bg-warning' : 'bg-danger');
-                
+                    .addClass(successRate >= 95 ? 'bg-success' :
+                        successRate >= 80 ? 'bg-warning' : 'bg-danger');
+
                 // Update maintenance card
                 const warnings = data.statistics?.maintenance_warnings || 0;
                 if (warnings > 0) {
@@ -888,7 +1009,7 @@
                 } else {
                     $('#maintenanceCount').addClass('d-none');
                 }
-                
+
                 // Update maintenance alerts
                 let maintenanceHtml = '';
                 if (data.crossing_status) {
@@ -904,7 +1025,7 @@
                         }
                     });
                 }
-                
+
                 if (!maintenanceHtml) {
                     maintenanceHtml = `
                         <div class="alert alert-success py-2">
@@ -912,7 +1033,7 @@
                         </div>`;
                 }
                 $('#maintenanceAlerts').html(maintenanceHtml);
-                
+
                 // Update component health bars
                 let totalBarrier = 0, totalLight = 0, totalAlarm = 0, count = 0;
                 if (data.crossing_status) {
@@ -925,66 +1046,75 @@
                         }
                     });
                 }
-                
+
                 if (count > 0) {
                     const avgBarrier = totalBarrier / count;
                     const avgLight = totalLight / count;
                     const avgAlarm = totalAlarm / count;
-                    
+
                     $('#barrierHealth').css('width', avgBarrier + '%')
                         .removeClass('bg-success bg-warning bg-danger')
                         .addClass(avgBarrier >= 70 ? 'bg-success' : avgBarrier >= 50 ? 'bg-warning' : 'bg-danger');
-                    
+
                     $('#lightHealth').css('width', avgLight + '%')
                         .removeClass('bg-success bg-warning bg-danger')
                         .addClass(avgLight >= 70 ? 'bg-success' : avgLight >= 50 ? 'bg-warning' : 'bg-danger');
-                    
+
                     $('#alarmHealth').css('width', avgAlarm + '%')
                         .removeClass('bg-success bg-warning bg-danger')
                         .addClass(avgAlarm >= 70 ? 'bg-success' : avgAlarm >= 50 ? 'bg-warning' : 'bg-danger');
                 }
-                
+
                 // Update statistics card
                 $('#totalTrains').text(data.global_state?.total_trains || 0);
                 $('#totalOperations').text(data.statistics?.total_operations || 0);
-                
+
                 const uptime = data.global_state?.uptime || 0;
                 const hours = Math.floor(uptime / 3600);
                 const minutes = Math.floor((uptime % 3600) / 60);
                 $('#uptimeHours').text(hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`);
-                
-                $('#emergencyEvents').text(data.statistics?.emergency_events || 0);
-                
-                // Update performance bar
-                const performance = data.statistics?.success_rate || 100;
+
+                // Update Hardware Stats prominently
+                const rank = data.statistics?.hardware_rank || 'N/A';
+                $('#emergencyEvents').text(rank);  // Use emergency display for hardware rank
+                $('.statistics-label:contains("Emergencies")').text("Hardware Rank");
+
+                // Update performance bar based on Hardware Score if available
+                const h_score = data.statistics?.hardware_score || 0;
+                const performance = h_score > 0 ? h_score : (data.statistics?.success_rate || 100);
+
                 $('#performanceBar').css('width', performance + '%')
                     .removeClass('bg-success bg-warning bg-danger')
-                    .addClass(performance >= 95 ? 'bg-success' : 
-                             performance >= 80 ? 'bg-warning' : 'bg-danger');
+                    .addClass(performance >= 85 ? 'bg-success' :
+                        performance >= 70 ? 'bg-warning' : 'bg-danger');
+
+                if (h_score > 0) {
+                    $('.statistics-label:contains("System Performance")').text(`Hardware Efficiency: ${performance}%`);
+                }
             }
-            
+
             renderCrossings(crossings) {
                 const container = document.getElementById('crossings-container');
                 container.innerHTML = '';
-                
+
                 crossings.forEach(crossing => {
                     const card = this.createCrossingCard(crossing);
                     container.appendChild(card);
                 });
             }
-            
+
             createCrossingCard(crossing) {
                 const div = document.createElement('div');
                 div.className = 'col-md-6 mb-3';
                 div.dataset.crossingId = crossing.id;
-                
+
                 const stateClass = crossing.state.toLowerCase().replace('_', '-');
-                const arrivalTime = crossing.arrival_time ? 
+                const arrivalTime = crossing.arrival_time ?
                     `${crossing.arrival_time.toFixed(1)}s` : 'Not approaching';
-                
+
                 // Get next action
                 const nextAction = this.getNextActionText(crossing.state);
-                
+
                 div.innerHTML = `
                     <div class="card state-card ${stateClass} crossing-card" data-crossing-id="${crossing.id}">
                         <div class="card-header">
@@ -1013,9 +1143,9 @@
                                 <div class="col-6">
                                     <small class="text-muted">Train</small>
                                     <div>
-                                        ${crossing.train_position > 0 ? 
-                                            `<span class="badge bg-danger">Present</span>` : 
-                                            `<span class="badge bg-secondary">Absent</span>`}
+                                        ${crossing.train_position > 0 ?
+                        `<span class="badge bg-danger">Present</span>` :
+                        `<span class="badge bg-secondary">Absent</span>`}
                                     </div>
                                 </div>
                             </div>
@@ -1066,10 +1196,10 @@
                         </div>
                     </div>
                 `;
-                
+
                 return div;
             }
-            
+
             getNextActionText(state) {
                 const actions = {
                     'IDLE': 'Waiting for train approach...',
@@ -1082,7 +1212,7 @@
                 };
                 return actions[state] || 'Unknown state';
             }
-            
+
             getStateColor(state) {
                 const colors = {
                     'IDLE': 'success',
@@ -1095,7 +1225,7 @@
                 };
                 return colors[state] || 'secondary';
             }
-            
+
             selectCrossing(crossingId) {
                 this.selectedCrossing = crossingId;
                 document.getElementById('crossing-select').value = crossingId;
@@ -1103,19 +1233,19 @@
                 this.loadNextActions();
                 this.addLog(`🔍 Selected Crossing ${crossingId + 1} for detailed view`, 'info');
             }
-            
+
             async sendCommand(command) {
                 const crossingId = document.getElementById('crossing-select').value;
                 const weather = document.getElementById('weather-select').value;
-                
+
                 const params = {
                     train_speed: Math.floor(Math.random() * 80) + 20, // 20-100 km/h
                     train_distance: Math.floor(Math.random() * 200) + 50, // 50-250m
                     weather: weather
                 };
-                
+
                 this.addLog(`⚡ Sending command: ${command} to Crossing ${parseInt(crossingId) + 1}`, 'info');
-                
+
                 try {
                     const response = await fetch(`${this.apiBase}/system/command`, {
                         method: 'POST',
@@ -1126,9 +1256,9 @@
                             parameters: params
                         })
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         const actionNames = {
                             'approach': 'Train Approach',
@@ -1138,7 +1268,7 @@
                             'reset': 'Reset',
                             'emergency': 'Emergency Stop'
                         };
-                        
+
                         this.addLog(`✅ ${actionNames[command]} executed on Crossing ${parseInt(crossingId) + 1}`, 'success');
                         await this.loadSystemStatus();
                         await this.loadDiagnostics();
@@ -1146,21 +1276,21 @@
                     } else {
                         this.addLog(`❌ Command failed: ${result.error}`, 'danger');
                     }
-                    
+
                 } catch (error) {
                     console.error('Command failed:', error);
                     this.addLog('❌ Network error - Command failed', 'danger');
                 }
             }
-            
+
             async startSimulation() {
                 this.addLog('▶️ Starting auto simulation...', 'info');
-                
+
                 try {
                     const response = await fetch(`${this.apiBase}/system/simulation/start`, {
                         method: 'POST'
                     });
-                    
+
                     if (response.ok) {
                         this.addLog('🚂 Auto simulation started! System will run through scenarios.', 'success');
                         document.getElementById('simulation-speed').textContent = 'Simulation Active';
@@ -1170,35 +1300,35 @@
                     this.addLog('❌ Failed to start simulation', 'danger');
                 }
             }
-            
+
             addLog(message, type = 'info') {
                 const logsDiv = document.getElementById('system-logs');
                 const timestamp = new Date().toLocaleTimeString();
-                
+
                 const icon = {
                     'info': 'ℹ️',
                     'success': '✅',
                     'warning': '⚠️',
                     'danger': '❌'
                 }[type] || 'ℹ️';
-                
+
                 const logEntry = document.createElement('div');
                 logEntry.className = `log-entry ${type}`;
                 logEntry.innerHTML = `
                     <small class="text-muted">${timestamp}</small>
                     <div>${icon} ${message}</div>
                 `;
-                
+
                 logsDiv.prepend(logEntry);
-                this.logEntries.unshift({timestamp, message, type});
-                
+                this.logEntries.unshift({ timestamp, message, type });
+
                 // Keep only last 15 logs
                 if (logsDiv.children.length > 15) {
                     logsDiv.removeChild(logsDiv.lastChild);
                     this.logEntries.pop();
                 }
             }
-            
+
             clearLogs() {
                 const logsDiv = document.getElementById('system-logs');
                 logsDiv.innerHTML = `
@@ -1209,7 +1339,7 @@
                 `;
                 this.logEntries = [];
             }
-            
+
             startPolling() {
                 this.pollingInterval = setInterval(() => {
                     this.loadSystemStatus();
@@ -1217,66 +1347,66 @@
                     this.updateTime();
                 }, 2000); // Update every 2 seconds
             }
-            
+
             updateSystemOverview(globalState) {
                 // Update overview cards
                 document.getElementById('total-trains').textContent = globalState.total_trains;
                 document.getElementById('system-uptime').textContent = `${globalState.uptime}s`;
-                document.getElementById('emergency-status').textContent = 
+                document.getElementById('emergency-status').textContent =
                     globalState.emergency ? 'YES ⚠️' : 'No ✅';
-                document.getElementById('emergency-status').className = 
+                document.getElementById('emergency-status').className =
                     globalState.emergency ? 'number text-danger' : 'number text-success';
-                
+
                 // Update system health in navbar
                 const health = globalState.system_health;
                 document.getElementById('system-health').textContent = `System Health: ${health.toFixed(1)}%`;
-                document.getElementById('system-health').className = 
+                document.getElementById('system-health').className =
                     `text-${health > 70 ? 'success' : health > 40 ? 'warning' : 'danger'}`;
-                
+
                 // Update active crossings count
                 const activeCrossings = document.querySelectorAll('.state-card:not(.idle):not(.maintenance)').length;
                 document.getElementById('active-crossings').textContent = activeCrossings;
-                document.getElementById('active-crossings').className = 
+                document.getElementById('active-crossings').className =
                     `number ${activeCrossings > 0 ? 'text-warning' : 'text-success'}`;
             }
-            
+
             updateVisualization(crossings) {
                 const track = document.getElementById('track-visualization');
-                
+
                 // Clear previous visualization except the crossing line
                 const crossingLine = track.querySelector('.crossing-line');
                 track.innerHTML = '';
                 if (crossingLine) track.appendChild(crossingLine);
-                
+
                 // Create barriers (always visible)
                 const barrierPositions = ['25%', '50%', '75%'];
                 barrierPositions.forEach(pos => {
                     const barrier = document.createElement('div');
                     barrier.className = 'barrier';
                     barrier.style.left = pos;
-                    
+
                     // Check if any crossing has barriers down
                     const anyBarrierDown = crossings.some(c => c.barrier === 'DOWN');
                     const angle = anyBarrierDown ? '45deg' : '0deg';
                     const origin = pos === '75%' ? 'right center' : 'left center';
-                    
+
                     barrier.style.transform = `rotate(${angle})`;
                     barrier.style.transformOrigin = origin;
-                    
+
                     track.appendChild(barrier);
                 });
-                
+
                 // Create trains for active crossings
                 crossings.forEach((crossing, index) => {
                     if (crossing.train_position > -100 && crossing.train_position <= 100) {
                         const train = document.createElement('div');
                         train.className = 'train';
                         train.id = `train-${index}`;
-                        
+
                         // Calculate position (convert -100 to 100 scale to 0 to 100%)
                         const position = ((crossing.train_position + 100) / 200) * 100;
                         train.style.left = `${position}%`;
-                        
+
                         // Color based on state
                         const colors = {
                             'EMERGENCY': 'linear-gradient(135deg, #dc3545 0%, #a71d2a 100%)',
@@ -1286,36 +1416,36 @@
                             'TRAIN_PASSING': 'linear-gradient(135deg, #6c757d 0%, #495057 100%)',
                             'IDLE': 'linear-gradient(135deg, #28a745 0%, #1e7e34 100%)'
                         };
-                        
+
                         train.style.background = colors[crossing.state] || colors['IDLE'];
                         train.textContent = crossing.id + 1;
-                        
+
                         track.appendChild(train);
                     }
                 });
             }
-            
+
             updateCountdowns(crossings) {
                 const countdownCard = document.getElementById('countdown-card');
                 let activeCountdown = null;
-                
+
                 crossings.forEach(crossing => {
                     if (crossing.state === 'COUNTDOWN' && crossing.countdown > 0) {
                         activeCountdown = crossing;
                     }
                 });
-                
+
                 if (activeCountdown) {
                     countdownCard.style.display = 'block';
-                    document.getElementById('countdown-display').textContent = 
+                    document.getElementById('countdown-display').textContent =
                         `${activeCountdown.countdown}s`;
-                    document.getElementById('countdown-crossing').textContent = 
+                    document.getElementById('countdown-crossing').textContent =
                         `Crossing ${activeCountdown.id + 1}`;
                 } else {
                     countdownCard.style.display = 'none';
                 }
             }
-            
+
             async loadNextActions() {
                 try {
                     const response = await fetch(`${this.apiBase}/system/next-actions`);
@@ -1325,22 +1455,22 @@
                     console.error('Failed to load next actions:', error);
                 }
             }
-            
+
             updateActionTimeline(actions) {
                 const timeline = document.getElementById('action-timeline');
                 const selectedActions = actions[this.selectedCrossing];
-                
+
                 if (!selectedActions) {
                     timeline.innerHTML = '<div class="text-muted">Select a crossing to see timeline</div>';
                     return;
                 }
-                
+
                 const steps = this.getTimelineSteps(selectedActions.current_state);
-                
+
                 timeline.innerHTML = steps.map((step, index) => {
                     const isCurrent = step.state === selectedActions.current_state;
                     const isCompleted = this.isStepCompleted(step.state, selectedActions.current_state);
-                    
+
                     return `
                         <div class="action-step ${isCurrent ? 'current' : ''} ${isCompleted ? 'completed' : ''}">
                             <div class="d-flex justify-content-between align-items-center">
@@ -1348,9 +1478,9 @@
                                     <strong>${step.title}</strong>
                                     <div class="text-muted" style="font-size: 0.9em;">${step.description}</div>
                                 </div>
-                                ${isCurrent ? '<span class="badge bg-primary">Current</span>' : 
-                                  isCompleted ? '<span class="badge bg-success">✓ Done</span>' : 
-                                  '<span class="badge bg-secondary">Pending</span>'}
+                                ${isCurrent ? '<span class="badge bg-primary">Current</span>' :
+                            isCompleted ? '<span class="badge bg-success">✓ Done</span>' :
+                                '<span class="badge bg-secondary">Pending</span>'}
                             </div>
                             ${isCurrent && selectedActions.estimated_time ? `
                                 <div class="mt-2">
@@ -1364,7 +1494,7 @@
                     `;
                 }).join('');
             }
-            
+
             getTimelineSteps(currentState) {
                 return [
                     {
@@ -1399,47 +1529,47 @@
                     }
                 ];
             }
-            
+
             isStepCompleted(stepState, currentState) {
                 const order = ['IDLE', 'WARNING', 'COUNTDOWN', 'BARRIER_DOWN', 'TRAIN_PASSING'];
                 const currentIndex = order.indexOf(currentState);
                 const stepIndex = order.indexOf(stepState);
-                
+
                 // If we're in emergency, nothing is completed
                 if (currentState === 'EMERGENCY') return false;
-                
-                return stepIndex < currentIndex || 
-                      (currentState === 'IDLE' && stepState === 'IDLE' && stepIndex === 0);
+
+                return stepIndex < currentIndex ||
+                    (currentState === 'IDLE' && stepState === 'IDLE' && stepIndex === 0);
             }
-            
+
             updateTime() {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', { 
+                const timeString = now.toLocaleTimeString('en-US', {
                     hour12: false,
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit'
                 });
-                
+
                 document.getElementById('current-time').textContent = timeString;
             }
-            
+
             updateLastUpdate() {
                 const now = new Date();
-                const timeString = now.toLocaleTimeString('en-US', { 
+                const timeString = now.toLocaleTimeString('en-US', {
                     hour12: false,
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit'
                 });
-                
+
                 document.getElementById('last-update').textContent = `Last updated: ${timeString}`;
             }
-            
+
             updateConnectionStatus(connected) {
                 const statusElement = document.getElementById('connection-status');
                 const indicator = statusElement.querySelector('.status-indicator');
-                
+
                 if (connected) {
                     indicator.className = 'status-indicator status-active';
                     statusElement.innerHTML = '<span class="status-indicator status-active"></span> Connected to Server';
@@ -1450,25 +1580,95 @@
                 }
             }
         }
-        
+
         // Initialize dashboard
         let dashboard;
         document.addEventListener('DOMContentLoaded', () => {
             dashboard = new EnhancedRailwayDashboard();
         });
-        
+
         // Global functions for buttons
         function sendCommand(command) {
             if (dashboard) dashboard.sendCommand(command);
         }
-        
+
         function startSimulation() {
             if (dashboard) dashboard.startSimulation();
         }
-        
+
         function clearLogs() {
             if (dashboard) dashboard.clearLogs();
         }
+
+        function getStateBadgeColor(state) {
+            const map = {
+                'IDLE': 'bg-secondary',
+                'WARNING': 'bg-warning text-dark',
+                'COUNTDOWN': 'bg-info text-dark',
+                'BARRIER_DN': 'bg-danger',
+                'TRAIN_PASS': 'bg-success',
+                'EMERGENCY': 'bg-danger border border-white',
+                'MAINTENANCE': 'bg-dark'
+            };
+            return map[state] || 'bg-light text-dark';
+        }
+
+        async function runVerilogSim() {
+            const btn = document.getElementById('run-verilog-btn');
+            const resultDiv = document.getElementById('verilog-result');
+            const scoreSpan = document.getElementById('v-score');
+            const rankSpan = document.getElementById('v-rank');
+            const timeSpan = document.getElementById('v-time');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Simulating...';
+
+            try {
+                const response = await fetch('/api/verilog/run', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.classList.remove('d-none', 'alert-danger');
+                    resultDiv.classList.add('alert-success');
+                    scoreSpan.textContent = data.score;
+                    rankSpan.textContent = 'Rank: ' + data.rank;
+                    timeSpan.textContent = 'Last test: ' + data.timestamp;
+
+                    // Populate Timeline
+                    if (data.timeline && data.timeline.length > 0) {
+                        const card = document.getElementById('verilog-timeline-card');
+                        const body = document.getElementById('verilog-timeline-body');
+                        card.classList.remove('d-none');
+                        body.innerHTML = '';
+
+                        // Show last 50 events to avoid overwhelming
+                        const events = data.timeline.slice(-50);
+                        events.forEach(event => {
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="text-muted small">${event.time}</td>
+                                ${event.states.map(s => `
+                                    <td><span class="badge ${getStateBadgeColor(s)}">${s.replace('_', ' ')}</span></td>
+                                `).join('')}
+                            `;
+                            body.appendChild(tr);
+                        });
+                    }
+                } else {
+                    resultDiv.classList.remove('d-none', 'alert-success');
+                    resultDiv.classList.add('alert-danger');
+                    resultDiv.innerHTML = '<strong>Error:</strong> ' + data.error;
+                }
+            } catch (error) {
+                resultDiv.classList.remove('d-none');
+                resultDiv.classList.add('alert-danger');
+                resultDiv.innerHTML = '<strong>Error:</strong> Connection failed';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-lightning-charge"></i> Launch Hardware Test';
+            }
+        }
     </script>
 </body>
+
 </html>
